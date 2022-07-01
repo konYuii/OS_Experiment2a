@@ -151,6 +151,7 @@
 #define __NR_pipe2	89
 #define __NR_sleep	90
 #define __NR_getcwd	91
+#define __NR_init_graphics 92
 
 
 #define _syscall0(type,name) \
@@ -286,6 +287,9 @@ pid_t setsid(void);
 // char * getcwd(char * buf, size_t size);
 // int execve2(const char * filename, char ** argv, char ** envp);
 // void pipe2();
+
+//experiment2 
+void init_graphics();
 
 
 #define __always_inline inline __attribute__((always_inline))

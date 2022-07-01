@@ -3,6 +3,8 @@
 		"sched.h": "c",
 		"signal.h": "c",
 		"types.h": "c",
-		"segment.h": "c"
+		"segment.h": "c",
+		"fs.h": "c",
+		"kernel.h": "c"
 	}
 }
