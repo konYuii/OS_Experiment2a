@@ -31,7 +31,10 @@ typedef struct{
 	int x;
 	int y;
 }point;
-
+typedef struct{
+	int x;
+	int y;
+}vector;
 point t[3];
 
 
@@ -100,6 +103,39 @@ void Bresenham_Line (point p1, point p2)
 
 }
 
+int inTriangle(int x,int y)
+{
+	vector pa,pb,pc;
+	vector ba,cb,ac;
+	int z1,z2,z3;
+
+	pa.x = x-t[0].x;
+	pa.y = y-t[0].y;
+	pb.x = x-t[1].x;
+	pb.y = y-t[1].y;
+	pc.x = x-t[2].x;
+	pc.y = y-t[2].y;
+
+	ba.x = t[1].x-t[0].x;
+	ba.y = t[1].y-t[0].y;
+	cb.x = t[2].x-t[1].x;
+	cb.y = t[2].y-t[1].y;
+	ac.x = t[0].x-t[2].x;
+	ac.y = t[0].y-t[2].y;
+
+	z1 = pa.x*ba.y - pa.y*ba.x;
+	z2 = pb.x*cb.y - pb.y*cb.x;
+	z3 = pc.x*ac.y - pc.y*ac.x;
+
+	if((z1>=0 && z2>=0 && z3>=0) || (z1<=0 && z2<=0 && z3<=0))
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
 
 int main()
 {
@@ -140,7 +176,15 @@ int main()
 			{
 				for(j=0;j<vga_height;j++)
 				{
-					paint(i,j,3);
+					if(i>=50 && j>=50 && i<=150 && j<=150 && inTriangle(i,j))
+					{
+						paint(i,j,7);
+					}
+					else
+					{
+						paint(i,j,3);						
+					}
+
 				}
 			}
 		}
