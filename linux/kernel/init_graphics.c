@@ -1,12 +1,13 @@
 #include <linux/kernel.h>
 #include <asm/io.h>
-#include <all.h>
+#include <ex2.h>
 #include <asm/segment.h>
 #define vga_graph_memstart 0xA0000
 #define vga_graph_memsize 64000
 #define cursor_side 6
 #define vga_width 320
-#define vga_heignt 200 
+#define vga_height 200 
+#define clean 666
 
 int sys_init_graphics()
 {
@@ -53,19 +54,32 @@ int sys_init_graphics()
     return 0;
 }
 
-int sys_repaint(struct pho * pho)
+int sys_paint(long x,long y,long color)
 {
-	int i, j;
-    char * p;
-    long color = get_fs_long(&pho->color);
-    long x = get_fs_long(&pho->x);
-    long y = get_fs_long(&pho->y);
-    long dx = get_fs_long(&pho->dx);
-    long dy = get_fs_long(&pho->dy);
-    for (i = x; i < x+dx; ++i) if (0 <= i && i < vga_width)
-        for (j = y; j < y+dy; ++j) if (0 <= j && j < vga_heignt){
-            p = (char *)vga_graph_memstart + vga_width*j + i;
-            *p = color;
-        }
+    char *p;
+    // long color = get_fs_long(&pho->color);
+    // long x = get_fs_long(&pho->x);
+    // long y = get_fs_long(&pho->y);
+    // if(x==clean && y==clean)
+    // {
+    //     int i,j;
+    //     for(i=0;i<vga_width;i++)
+	// 	{
+	// 		for(j=0;j<vga_height;j++)
+	// 		{
+	// 			p = (char *)vga_graph_memstart + vga_width*j + i;
+    //             *p = color;
+	// 		}
+	// 	}
+    //     return 0;
+    // }
+
+    if(x>=0 && y>=0 && x<vga_width && y<vga_height)
+    {
+        p = (char *)vga_graph_memstart + vga_width*y + x;
+        *p = color;        
+    }
+
+
     return 0; 
 }

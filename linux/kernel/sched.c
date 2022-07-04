@@ -302,7 +302,7 @@ void add_timer(long jiffies, void (*fn)(void))
 	sti();
 }
 
-#include <all.h>
+#include <ex2.h>
 
 
 struct user_timer * user_timer_list = NULL;

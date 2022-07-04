@@ -1,7 +1,7 @@
 #ifndef _UNISTD_H
 #define _UNISTD_H
 #include<linux/tty.h>
-#include<all.h>
+#include<ex2.h>
 /* ok, this may be a joke, but I'm working on it */
 #define _POSIX_VERSION 198808L
 
@@ -155,7 +155,7 @@
 #define __NR_getcwd 91
 #define __NR_init_graphics 92
 #define __NR_get_message 93
-#define __NR_repaint 94
+#define __NR_paint 94
 #define __NR_timercreate 95
 
 #define _syscall0(type,name) \

@@ -98,7 +98,7 @@ extern int sys_sleep();
 extern long sys_getcwd();
 extern int sys_init_graphics();
 extern int sys_get_message();
-extern int sys_repaint();
+extern int sys_paint();
 extern int sys_timercreate();
 
 fn_ptr sys_call_table[] = { sys_setup, sys_exit, sys_fork, sys_read,
@@ -117,7 +117,7 @@ sys_setreuid,sys_setregid, sys_sigsuspend, sys_sigpending, sys_sethostname,
 sys_setrlimit, sys_getrlimit, sys_getrusage, sys_gettimeofday, 
 sys_settimeofday, sys_getgroups, sys_setgroups, sys_select, sys_symlink,
 sys_lstat, sys_readlink, sys_uselib, sys_execve2, sys_getdents, sys_something ,sys_sleep, sys_getcwd
-,sys_init_graphics,sys_get_message,sys_repaint
+,sys_init_graphics,sys_get_message,sys_paint
 ,sys_timercreate
 };
 
