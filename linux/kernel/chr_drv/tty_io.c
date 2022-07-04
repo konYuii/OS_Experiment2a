@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <signal.h>
 
+
 #define ALRMMASK (1<<(SIGALRM-1))
 #define KILLMASK (1<<(SIGKILL-1))
 #define INTMASK (1<<(SIGINT-1))
@@ -346,4 +347,80 @@ void do_tty_interrupt(int tty)
 
 void chr_dev_init(void)
 {
+}
+
+#include<all.h>
+#define MSG_MOUSE_CLICK 1
+static unsigned char mouse_input_count = 0; //用来记录是鼠标输入的第几个字节的全局变量
+static unsigned char mouse_left_down; //用来记录鼠标左键是否按下
+static unsigned char mouse_right_down; //用来记录鼠标右键是否按下
+static unsigned char mouse_center_down; // 中键按下标志，1表示按下了左键
+static unsigned char mouse_left_move; //用来记录鼠标是否向左移动
+static unsigned char mouse_down_move;//用来记录鼠标是否向下移动
+static unsigned char mouse_x_overflow; // x溢出标志位，1表示x位移量溢出
+static unsigned char mouse_y_overflow; // y溢出标志位，1表示x位移量溢出
+static unsigned int mouse_x_position; //用来记录鼠标的 x 轴位置
+static unsigned int mouse_y_position;//用来记录鼠标的 y 轴位置
+
+void readmouse(int mousecode)
+{ 
+//printk("1\n");
+
+//reset the condition of all mouse
+if(mousecode==0xFA || mouse_input_count>=4 )
+{
+	mouse_input_count=1;
+return ;
+}
+
+
+switch(mouse_input_count)
+{
+case 1:
+//Misplaced abandonment
+	mouse_left_down=(mousecode &0x01) ==0x01;
+	mouse_center_down = (mousecode & 0x4) == 0x4;
+	mouse_right_down=(mousecode &0x02)==0x02;
+	mouse_left_move=(mousecode & 0x10)==0x10;
+	mouse_down_move=(mousecode & 0x20)==0x20;
+	mouse_x_overflow = (mousecode & 0x40) == 0x40;
+	mouse_y_overflow = (mousecode & 0x80) == 0x80;
+	mouse_input_count++;
+	if(mouse_left_down==1 && mouse_left_move==0 && mouse_down_move==0)
+	{
+		post_message(MSG_MOUSE_LEFT_DOWN);
+	}
+	if (mouse_right_down==1&& mouse_left_move==0 && mouse_down_move==0)
+	{
+		post_message(MSG_MOUSE_RIGHT_DOWN);
+	}
+
+	break;
+
+
+case 2:
+	//get the x of mouse
+	if(mouse_left_move) 
+	mouse_x_position +=(int)(0xFFFFFF00|mousecode);
+	/*if(mouse_x_position>100) mouse_x_position=100;
+	if(mouse_x_position<0) mouse_x_position=0;*/
+	mouse_input_count++;
+	break;
+
+
+case 3:
+	//get the y of mouse
+	if(mouse_down_move) 
+	mouse_y_position +=(int)(0xFFFFFF00|mousecode);
+	/*if(mouse_y_position>100) mouse_y_position=100;
+	if(mouse_y_position<0) mouse_y_position=0;*/
+	mouse_input_count++;
+	break;
+
+case 4:
+//get the z but we do not need it
+++mouse_input_count;
+break;
+}
+//sys_init_graphics();
 }

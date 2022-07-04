@@ -1,6 +1,7 @@
 #ifndef _UNISTD_H
 #define _UNISTD_H
-
+#include<linux/tty.h>
+#include<all.h>
 /* ok, this may be a joke, but I'm working on it */
 #define _POSIX_VERSION 198808L
 
@@ -145,14 +146,17 @@
 #define __NR_readlink	85
 #define __NR_uselib	86
 
-//experiment1
-#define __NR_execve2	87
-#define __NR_getdents	88
-#define __NR_pipe2	89
-#define __NR_sleep	90
-#define __NR_getcwd	91
-#define __NR_init_graphics 92
 
+
+#define __NR_execve2 87
+#define __NR_getdents 88
+#define __NR_something 89
+#define __NR_sleep 90
+#define __NR_getcwd 91
+#define __NR_init_graphics 92
+#define __NR_get_message 93
+#define __NR_repaint 94
+#define __NR_timercreate 95
 
 #define _syscall0(type,name) \
 type name(void) \
@@ -275,22 +279,10 @@ pid_t getpgrp(void);
 pid_t setsid(void);
 
 
-//experiment1
-// struct linux_dirent{
-// 	long d_ino;
-// 	off_t d_off;
-// 	unsigned short d_reclen;
-// 	char* d_name;
-// };
-// int sleep(unsigned int time);
-// int getdents(unsigned int fd,struct linux_dirent *dirp,unsigned int len);
-// char * getcwd(char * buf, size_t size);
-// int execve2(const char * filename, char ** argv, char ** envp);
-// void pipe2();
-
-//experiment2 
-void init_graphics();
-
+char* getcwd(char *buf,size_t size);
+int something(void);
+int sleep(unsigned int seconds);
+int execve2(const char *path,char *argv[],char *envp[]);
 
 #define __always_inline inline __attribute__((always_inline))
 

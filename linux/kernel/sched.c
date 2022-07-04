@@ -20,18 +20,8 @@
 
 #include <signal.h>
 
-
 #define _S(nr) (1<<((nr)-1))
 #define _BLOCKABLE (~(_S(SIGKILL) | _S(SIGSTOP)))
-
-
-struct linux_dirent
-{
-	long d_ino;
-	off_t d_off;
-	unsigned short d_reclen;
-	char d_name[14];
-};
 
 void show_task(int nr,struct task_struct * p)
 {
@@ -312,10 +302,64 @@ void add_timer(long jiffies, void (*fn)(void))
 	sti();
 }
 
+#include <all.h>
+
+
+struct user_timer * user_timer_list = NULL;
+
+int sys_timercreate(long ms, int type)
+{
+	struct user_timer * timer = malloc(sizeof(struct user_timer));
+	long jiffies = ms / 10;
+	timer->jiffies = timer->init_jiffies = jiffies;
+	timer->pid = current->pid;
+	timer->type = type;
+	timer->next = user_timer_list;
+	user_timer_list = timer;
+	return 0;
+}
+
 void do_timer(long cpl)
 {
 	extern int beepcount;
 	extern void sysbeepstop(void);
+
+	struct user_timer * timer = user_timer_list;
+	struct user_timer * prev = NULL;
+	while(timer != NULL)
+	{
+		if ((--timer->jiffies) <= 0) {
+			post_message(MSG_USER_TIMER);
+			switch(timer->type) {
+			case TYPE_USER_TIMER_INFTY: 
+				timer->jiffies = timer->init_jiffies;
+				prev = timer;
+				timer = timer->next;
+				break;
+			case TYPE_USER_TIMER_ONCE: 
+				if (prev == NULL) {
+					free(timer);
+					timer = NULL;
+					user_timer_list = NULL;
+				}
+				else {
+					prev->next = timer->next;
+					free(timer);
+					timer = prev->next;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			prev = timer;
+			timer = timer->next;
+		}
+	}
+
+
 
 	if (beepcount)
 		if (!--beepcount)
@@ -419,123 +463,4 @@ void sched_init(void)
 	set_intr_gate(0x20,&timer_interrupt);
 	outb(inb_p(0x21)&~0x01,0x21);
 	set_system_gate(0x80,&system_call);
-}
-
-//exeperiment 1
-int sys_sleep(unsigned int seconds)
-{
-	sys_signal(SIGALRM, SIG_IGN, NULL);
-	sys_alarm(seconds);
-	sys_pause();
-	return 0;
-}
-int sys_getdents(unsigned int fd, struct linux_dirent *dirent, unsigned int len)
-{
-	struct m_inode *myNode;
-	myNode = current->filp[fd]->f_inode;
-	struct buffer_head *myBlock;
-	myBlock = bread(myNode->i_dev,myNode->i_zone[0]);
-
-	struct dir_entry *myDir;
-	myDir = (struct dir_entry *)(myBlock->b_data);
-
-	int total = 0;
-	struct linux_dirent myDirent;
-	while(total+24<1024)
-	{
-		if(myDir->inode==0 || total + 24 > len)
-		{
-			return total;
-		}
-		if(myDir->inode)
-		{
-			myDirent.d_ino = myDir->inode;
-			int i;
-			for(i=0;i<NAME_LEN;i++)
-				myDirent.d_name[i] = myDir->name[i];
-			myDirent.d_off = total;
-			myDirent.d_reclen = 24;
-
-			//printk("%s\t",myDirent.d_name);
-			char *buf = &myDirent;
-			for(i=0;i<24;i++)
-				put_fs_byte(*(buf + i),(char *)dirent + i + total);
-		}
-		total+=24;
-		myDir++;
-	}
-	return total;
-}
-
-
-char* sys_getcwd(char * buf, size_t size)
-{
-	struct m_inode *myNode = current->pwd;
-
-	char path[10][14];
-	int total = 0;
-	while(1)
-	{
-
-		int i;
-		struct buffer_head *myBlock;
-		myBlock = bread(myNode->i_dev, myNode->i_zone[0]);
-		struct dir_entry *myDir;
-		myDir = (struct dir_entry *)(myBlock->b_data);
-		int myid = myDir->inode;
-		myDir++;
-		
-
-		struct m_inode *paNode;
-		paNode = iget(myNode->i_dev, myDir->inode);
-		if(paNode == myNode)
-			break;
-		struct buffer_head *paBlock;
-		paBlock = bread(paNode->i_dev, paNode->i_zone[0]);
-		struct dir_entry *paDir;
-		paDir = (struct dir_entry *)(paBlock->b_data);
-		for(i=0;i<20;i++)
-		{
-			if(paDir->inode == 0)
-				break;
-			if(paDir->inode == myid)
-			{
-				//printk("%s\n", paDir->name);
-				strcpy(path[total],paDir->name);
-				total++;
-				break;
-			}
-			
-
-			paDir++;
-		}
-
-		myNode = paNode;
-	}
-	int k;
-	int cnt=0;
-	for(k=total-1;k>=0;k--)
-	{
-		//printk("pathK: %s\n",path[k]);
-		int m;
-		for(m=0;m<strlen(path[k]);m++)
-		{
-			/* if(path[k][m]=='\0')
-				break; */
-			put_fs_byte(path[k][m],buf+cnt);
-			cnt++;
-		}
-		put_fs_byte('/',buf+cnt);
-		cnt++;
-		//printk("%d\n",cnt);
-	}
-	put_fs_byte('\0',buf+cnt);
-	return buf;
-}
-
-
-
-void sys_pipe2()
-{
-
 }

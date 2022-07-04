@@ -25,8 +25,7 @@ __always_inline _syscall0(int,fork)
 __always_inline _syscall0(int,pause)
 __always_inline _syscall1(int,setup,void *,BIOS)
 __always_inline _syscall0(int,sync)
-
-
+__always_inline _syscall0(int,init_graphics)
 
 #include <linux/tty.h>
 #include <linux/sched.h>
@@ -53,6 +52,8 @@ extern void mem_init(long start, long end);
 extern long rd_init(long mem_start, int length);
 extern long kernel_mktime(struct tm * tm);
 extern long startup_time;
+
+extern int init_graphics();
 
 /*
  * This is set up by the setup-routine at boot-time
@@ -135,11 +136,11 @@ void main(void)		/* This really IS void, no error here. */
 	sched_init();
 	buffer_init(buffer_memory_end);
 	hd_init();
-
-
-
-
 	floppy_init();
+	/*if(init_graphics()<0)
+	printk("error 1\n");*/
+
+
 	sti();
 	move_to_user_mode();
 	if (!fork()) {		/* we count on this going ok */
@@ -183,8 +184,6 @@ void init(void)
 	printf("%d buffers = %d bytes buffer space\n\r",NR_BUFFERS,
 		NR_BUFFERS*BLOCK_SIZE);
 	printf("Free mem: %d bytes\n\r",memory_end-main_memory_start);
-
-
 	if (!(pid=fork())) {
 		close(0);
 		if (open("/etc/rc",O_RDONLY,0))
@@ -215,4 +214,8 @@ void init(void)
 		sync();
 	}
 	_exit(0);	/* NOTE! _exit, not exit() */
+}
+
+void print_nr(int sid)
+{;
 }

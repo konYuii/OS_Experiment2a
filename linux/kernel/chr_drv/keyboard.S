@@ -66,8 +66,10 @@ e0_e1:	inb $0x61,%al
 	movb $0x20,%al
 	outb %al,$0x20
 	pushl $0
+
 	call do_tty_interrupt
 	addl $4,%esp
+	
 	pop %es
 	pop %ds
 	popl %edx
@@ -75,11 +77,13 @@ e0_e1:	inb $0x61,%al
 	popl %ebx
 	popl %eax
 	iret
+
+
+
 set_e0:	movb $1,e0
 	jmp e0_e1
 set_e1:	movb $2,e0
 	jmp e0_e1
-
 
 /*
  * This routine fills the buffer with max 8 bytes, taken from

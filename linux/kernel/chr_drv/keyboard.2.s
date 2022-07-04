@@ -97,8 +97,10 @@ e0_e1:	inb $0x61,%al
 	movb $0x20,%al
 	outb %al,$0x20
 	pushl $0
+
 	call do_tty_interrupt
 	addl $4,%esp
+	
 	pop %es
 	pop %ds
 	popl %edx
@@ -106,11 +108,13 @@ e0_e1:	inb $0x61,%al
 	popl %ebx
 	popl %eax
 	iret
+
+
+
 set_e0:	movb $1,e0
 	jmp e0_e1
 set_e1:	movb $2,e0
 	jmp e0_e1
-
 
 
 
@@ -273,7 +277,7 @@ func_table:
 	.long 0x455b5b1b,0x465b5b1b,0x475b5b1b,0x485b5b1b
 	.long 0x495b5b1b,0x4a5b5b1b,0x4b5b5b1b,0x4c5b5b1b
 
-# 295 "keyboard.S"
+# 299 "keyboard.S"
 
 key_map:
 	.byte 0,27
@@ -324,7 +328,7 @@ alt_map:
 	.byte '|
 	.fill 10,1,0
 
-# 450 "keyboard.S"
+# 454 "keyboard.S"
 
 
 

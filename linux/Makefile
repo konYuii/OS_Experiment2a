@@ -84,12 +84,6 @@ fs/fs.o: FORCE
 lib/lib.a: FORCE
 	(cd lib; make)
 
-keyboard.2.s: keyboard.S ../../include/linux/config.h
-	$(CPP) -traditional keyboard.S -o keyboard.2.s
-
-mouse.2.s: mouse.S ../../include/linux/config.h
-	$(CPP) -traditional mouse.S -o mouse.2.s
-
 FORCE:
 
 boot/setup: boot/setup.s

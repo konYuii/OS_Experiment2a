@@ -359,15 +359,21 @@ exec_error1:
 }
 
 
-extern void get_do_no_page(unsigned long start, unsigned end)
+
+
+
+
+
+
+
+
+
+
+
+static inline volatile void oom(void)
 {
-	unsigned long addr;
-	start &= 0xfffff000;
-	end = (end - 1) & 0xfffff000;
-	for (addr = start; addr <= end; addr += 4096)
-	{
-		do_no_page(4, addr + current->start_code);
-	}
+	printk("out of memory\n\r");
+	do_exit(SIGSEGV);
 }
 int do_execve2(unsigned long * eip,long tmp,char * filename,
 	char ** argv, char ** envp)
@@ -380,9 +386,9 @@ int do_execve2(unsigned long * eip,long tmp,char * filename,
 	int e_uid, e_gid;
 	int retval;
 	int sh_bang = 0;
-	unsigned long p=PAGE_SIZE*MAX_ARG_PAGES-4;
+	unsigned long p=PAGE_SIZE*MAX_ARG_PAGES-4;/*Save environment variables and parameters*/
 
-	if ((0xffff & eip[1]) != 0x000f)
+	if ((0xffff & eip[1]) != 0x000f)/*Check if it's a kernel code snippet*/
 		panic("execve called from supervisor mode");
 	for (i=0 ; i<MAX_ARG_PAGES ; i++)	/* clear page-table */
 		page[i]=0;
@@ -517,6 +523,8 @@ restart_interp:
 	current->close_on_exec = 0;
 	free_page_tables(get_base(current->ldt[1]),get_limit(0x0f));
 	free_page_tables(get_base(current->ldt[2]),get_limit(0x17));
+
+    
 	if (last_task_used_math == current)
 		last_task_used_math = NULL;
 	current->used_math = 0;
@@ -529,12 +537,44 @@ restart_interp:
 	current->euid = e_uid;
 	current->egid = e_gid;
 
-	get_do_no_page(0, current->brk);
+
+
+	/*we should write here*/
+	/*we clean the page before we load the page*/
+	/*new*/
+	
+	
+	unsigned long address,tmp1,page_judge;
+	int nr[4];
+	int block,j;
+	address=current->start_code&0xfffff000;
+	tmp1=0;
+	/*brk is the length of code+data snippet*/
+	for(;address<=current->start_code+current->brk;address+=4096,tmp1=page+4096)
+	{
+	if (!(page_judge = get_free_page()))
+		oom();
+	/* remember that 1 block is used for header */
+	block = 1 + tmp1/BLOCK_SIZE;
+	for (j=0 ; j<4 ; block++,j++)
+		nr[j] = bmap(current->executable,block);
+	bread_page(page_judge,current->executable->i_dev,nr);
+	if (!put_page(page_judge,address))/*do not get the page ,free it*/
+	{
+	free_page(page_judge);
+	oom();
+	}
+	
+	}
+
+
+    /*end*/
 	i = ex.a_text+ex.a_data;
 	while (i&0xfff)
 		put_fs_byte(0,(char *) (i++));
 	eip[0] = ex.a_entry;		/* eip, magic happens :-) */
 	eip[3] = p;			/* stack pointer */
+	/*printk("\nover\n");*/
 	return 0;
 exec_error2:
 	iput(inode);
@@ -543,4 +583,3 @@ exec_error1:
 		free_page(page[i]);
 	return(retval);
 }
-

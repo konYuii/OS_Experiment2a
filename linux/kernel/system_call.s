@@ -1,3 +1,4 @@
+
 /*
  *  linux/kernel/system_call.s
  *
@@ -58,7 +59,7 @@ sa_mask = 4
 sa_flags = 8
 sa_restorer = 12
 
-nr_system_calls = 93  /* 72 */
+nr_system_calls =97  /* 72 the number of system*/
 
 /*
  * Ok, I get parallel printer interrupts while using the floppy for some
@@ -91,6 +92,11 @@ system_call:
 	mov %dx,%es
 	movl $0x17,%edx		# fs points to local data space
 	mov %dx,%fs
+
+	pushl %eax   #by wyj
+	call print_nr
+	popl %eax
+
 	call sys_call_table(,%eax,4)
 	pushl %eax
 	movl current,%eax
@@ -211,7 +217,6 @@ sys_execve2:
 	call do_execve2
 	addl $4,%esp
 	ret
-
 
 .align 4
 sys_fork:
